@@ -5,15 +5,15 @@ import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
-import android.os.Build
+import android.os.*
 import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-import android.os.Environment
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
+import java.util.*
+import kotlin.concurrent.schedule
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,12 +22,20 @@ class MainActivity : AppCompatActivity() {
     private var state: Boolean = false
     private var recordingStopped: Boolean = false
 
+    private lateinit var mHandler: Handler
+    private lateinit var mRunnable:Runnable
+    private var n = 0
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        n=0
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        mHandler = Handler()
+
         mediaRecorder = MediaRecorder()
-        output = Environment.getExternalStorageDirectory().absolutePath + "/recording.mp3"
+        output = Environment.getExternalStorageDirectory().absolutePath + "/recording_$n.mp3"
 
         mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
         mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
@@ -45,14 +53,23 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+
         button_stop_recording.setOnClickListener{
+            mHandler.removeCallbacks(mRunnable)
             stopRecording()
         }
 
-        button_pause_recording.setOnClickListener {
-            pauseRecording()
+        button_monitor.setOnClickListener {
+            mRunnable = Runnable {
+                monitor()
+                mHandler.postDelayed(mRunnable,5000)
+            }
+            mHandler.postDelayed(mRunnable,5000)
         }
+
+
     }
+
 
     private fun startRecording() {
         try {
@@ -69,17 +86,18 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("RestrictedApi", "SetTextI18n")
     @TargetApi(Build.VERSION_CODES.N)
-    private fun pauseRecording() {
-//        if(state) {
-//            if(!recordingStopped){
-                  Toast.makeText(this,"maxAmplitude=${mediaRecorder?.maxAmplitude}", Toast.LENGTH_SHORT).show()
-//                mediaRecorder?.pause()
-//                recordingStopped = true
-//                button_pause_recording.text = "Resume"
-//            }else{
-//                resumeRecording()
-//            }
-//        }
+    private fun monitor() {
+        val amp = mediaRecorder?.maxAmplitude
+        val ampString = "$amp:${n++}"
+        System.out.println("Sound Level:$ampString")
+        textview_sound_level.text = ampString
+        //stopRecording()
+        if (amp!! > 5000) {
+            //move file
+            System.out.println("############## LOUD ##############")
+        }
+        //startRecording()
+        mediaRecorder?.maxAmplitude
     }
 
     @SuppressLint("RestrictedApi", "SetTextI18n")
@@ -87,7 +105,6 @@ class MainActivity : AppCompatActivity() {
     private fun resumeRecording() {
         Toast.makeText(this,"Resume!", Toast.LENGTH_SHORT).show()
         mediaRecorder?.resume()
-        button_pause_recording.text = "Pause"
         recordingStopped = false
     }
 
@@ -99,5 +116,6 @@ class MainActivity : AppCompatActivity() {
         }else{
             Toast.makeText(this, "You are not recording right now!", Toast.LENGTH_SHORT).show()
         }
+
     }
 }
