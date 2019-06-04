@@ -11,9 +11,11 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
+import org.apache.commons.mail.DefaultAuthenticator
+import org.apache.commons.mail.HtmlEmail
+import java.io.File
 import java.io.IOException
-import java.util.*
-import kotlin.concurrent.schedule
+import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
@@ -92,13 +94,38 @@ class MainActivity : AppCompatActivity() {
         val ampString = "$amp:${n++}"
         System.out.println("Sound Level:$ampString")
         textview_sound_level.text = ampString
-        //stopRecording()
+        stopRecording()
+
+        emailFile(output)
+
         if (amp!! > 5000) {
-            //move file
-            System.out.println("############## LOUD ##############")
+            //
+            emailFile(output)
+            //File(output).renameTo(File(Environment.getExternalStorageDirectory().absolutePath + "/recording_LOUD_$n.mp3"))
+        } else {
+            File(output).delete()
         }
-        //startRecording()
+        startRecording()
         mediaRecorder?.maxAmplitude
+    }
+
+    fun emailFile(fileName:String?) {
+        val senderEmail = "dabevan@gmail.com"
+        val password = "gP0lperr0"
+        val toMail = "email@davidbevan.co.uk"
+
+        val email = HtmlEmail()
+        email.hostName = "smtp.googlemail.com"
+        email.setSmtpPort(465)
+        email.setAuthenticator(DefaultAuthenticator(senderEmail, password))
+        email.isSSLOnConnect = true
+        email.setFrom(senderEmail)
+        email.addTo(toMail)
+        email.subject = "Test email with inline image sent using Kotlin"
+        val kotlinLogoURL = URL("https://kotlinlang.org/assets/images/twitter-card/kotlin_800x320.png")
+        val cid = email.embed(kotlinLogoURL, "Kotlin logo")
+        email.setHtmlMsg("<html><h1>Kotlin logo</h1><img src=\"cid:$cid\"></html>")
+        email.send()
     }
 
     @SuppressLint("RestrictedApi", "SetTextI18n")
