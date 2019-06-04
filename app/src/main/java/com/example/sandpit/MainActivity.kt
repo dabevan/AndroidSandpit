@@ -34,13 +34,6 @@ class MainActivity : AppCompatActivity() {
 
         mHandler = Handler()
 
-        mediaRecorder = MediaRecorder()
-        output = Environment.getExternalStorageDirectory().absolutePath + "/recording_$n.mp3"
-
-        mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-        mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-        mediaRecorder?.setOutputFile(output)
 
         button_start_recording.setOnClickListener {
             if (ContextCompat.checkSelfPermission(this,
@@ -73,6 +66,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun startRecording() {
         try {
+            mediaRecorder = MediaRecorder()
+            output = Environment.getExternalStorageDirectory().absolutePath + "/recording_$n.mp3"
+
+            mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
+            mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            mediaRecorder?.setOutputFile(output)
+
             mediaRecorder?.prepare()
             mediaRecorder?.start()
             state = true
